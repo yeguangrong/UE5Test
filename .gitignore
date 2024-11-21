@@ -290,3 +290,6 @@ Engine/Programs/
 Engine/Source/ThirdParty/
 Templates/
 Samples/
+Engine/Source/Programs/UnrealVersionSelector/
+Engine/Source/Programs/Horde/Horde.Build.Tests/
+Engine/Source/Developer/AITestSuite/
