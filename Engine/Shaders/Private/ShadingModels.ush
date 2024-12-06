@@ -329,10 +329,10 @@ FDirectLighting DefaultLitBxDF( FGBufferData GBuffer, half3 N, half3 V, half3 L,
 	}
 
 	FBxDFEnergyTerms EnergyTerms = ComputeGGXSpecEnergyTerms(GBuffer.Roughness, Context.NoV, GBuffer.SpecularColor);
-	
+
 	// Add energy presevation (i.e. attenuation of the specular layer onto the diffuse component
 	Lighting.Diffuse *= ComputeEnergyPreservation(EnergyTerms);
-	
+
 	// Add specular microfacet multiple scattering term (energy-conservation)
 	Lighting.Specular *= ComputeEnergyConservation(EnergyTerms);
 

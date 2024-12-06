@@ -177,8 +177,7 @@ half3 ColorLookupTable( half3 LinearColor )
 	half3 OutDeviceColor = UnwrappedTexture3DSample( ColorGradingLUT, ColorGradingLUTSampler, UVW, LUTSize, InvLUTSize ).rgb;
 #endif
 	
-	//return OutDeviceColor * 1.05;
-	return OutDeviceColor;
+	return OutDeviceColor * 1.05;
 }
 
 // can be optimized
@@ -690,85 +689,6 @@ float4 TonemapCommonPS(
 	return OutColor;
 }
 
-float4 TonemapCommonPS2(
-	float2 UV,
-	float2 Vignette,
-	float4 GrainUV,
-	float2 ScreenPos, // [-1, 1]x[-1, 1]
-	float2 FullViewUV,
-	float4 SvPosition,
-	out float OutLuminance
-	)
-{
-	float4 OutColor = 0;
-	OutLuminance = 0;
-
-	float2 SceneUV = UV.xy;
-
-	half4 SceneColor = SampleSceneColor(SceneUV);
-
-	SceneColor.rgb *= View.OneOverPreExposure;
-
-	float2 EyeAdaptationData = EyeAdaptationBuffer[0].xw;
-
-	float ExposureScale = EyeAdaptationData.x;
-
-	#if USE_GAMMA_ONLY
-
-		//SceneColor.rgb *= ExposureScale;
-
-		OutColor.rgb = pow(SceneColor.rgb, InverseGamma.x);
-		OutLuminance = Luminance(OutColor.rgb);
-
-	#else 
-	{
-		half3 LinearColor = SceneColor.rgb;
-		
-		//LinearColor *= ExposureScale;
-
-		half3 OutDeviceColor = ColorLookupTable(LinearColor);
-		
-		half LuminanceForPostProcessAA = dot(OutDeviceColor, half3(0.299f, 0.587f, 0.114f));
-		OutLuminance = LuminanceForPostProcessAA;
-
-
-		// RETURN_COLOR not needed unless writing to SceneColor
-		OutColor.rgb = OutDeviceColor;
-
-		#if USE_LINEAR_FLOAT_RT
-			OutColor.rgb = sRGBToLinear( OutColor.rgb );
-		#endif
-		
-		#if DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_ACES1000nitScRGB || DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_ACES2000nitScRGB
-			OutColor.xyz = ST2084ToScRGB(OutColor.xyz, DIM_OUTPUT_DEVICE, OutputMaxLuminance);
-		
-		#elif DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_LinearEXR
-			OutColor.xyz = ST2084ToLinear(OutColor.xyz);
-		#elif DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_NoToneCurve
-			OutColor.xyz = OutDeviceColor;
-		#elif DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_WithToneCurve
-			OutColor.xyz = OutDeviceColor;
-		#endif
-	}
-	#endif
-	
-	#if POST_PROCESS_ALPHA == 2 || (POST_PROCESS_ALPHA == 1 && DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_NoToneCurve)  || (POST_PROCESS_ALPHA == 1 && DIM_OUTPUT_DEVICE == TONEMAPPER_OUTPUT_WithToneCurve)
-		OutColor.a = SceneColor.a;
-	#endif
-
-#if PC_D3D && !USE_GAMMA_ONLY
-	// If HDR in the editor need to convert from PQ space to linear sRGB
-	BRANCH
-	if(bOutputInHDR)
-	{
-		OutColor.rgb = ST2084ToLinear(OutColor.rgb);
-		OutColor.rgb = OutColor.rgb / EditorNITLevel;
-        OutColor.rgb = LinearToPostTonemapSpace(OutColor.rgb);
-	}
-#endif
-	return OutColor;
-}
-
 // pixel shader entry point
 void MainPS(
 	in noperspective float2 UV : TEXCOORD0,
@@ -784,8 +704,7 @@ void MainPS(
 	)
 {
 	float Luminance;
-    //OutColor = TonemapCommonPS(UV, InVignette, GrainUV, ScreenPos, FullViewUV, SvPosition, Luminance);
-    OutColor = TonemapCommonPS2(UV, InVignette, GrainUV, ScreenPos, FullViewUV, SvPosition, Luminance);
+    OutColor = TonemapCommonPS(UV, InVignette, GrainUV, ScreenPos, FullViewUV, SvPosition, Luminance);
 #if OUTPUT_LUMINANCE
 	OutLuminance = Luminance;
 #endif

@@ -249,7 +249,6 @@ float GetLocalLightAttenuation(
 	L = ToLight * rsqrt( DistanceSqr );
 
 	float LightMask;
-
 	if (LightData.bInverseSquared)
 	{
 		LightMask = Square( saturate( 1 - Square( DistanceSqr * Square(LightData.InvRadius) ) ) );
@@ -263,12 +262,12 @@ float GetLocalLightAttenuation(
 	{
 		LightMask = RadialAttenuation(ToLight * LightData.InvRadius, LightData.FalloffExponent);
 	}
-	
+
 	if (LightData.bSpotLight)
 	{
 		LightMask *= SpotAttenuation(L, -LightData.Direction, LightData.SpotAngles);
 	}
-	
+
 	if( LightData.bRectLight )
 	{
 		// Rect normal points away from point
@@ -445,7 +444,6 @@ float4 GetDynamicLighting(
 		SurfaceShadow);
 
 	return SplitLighting.SpecularLighting + SplitLighting.DiffuseLighting;
-	//return float4(0,0,0,0);
 }
 
 /** 

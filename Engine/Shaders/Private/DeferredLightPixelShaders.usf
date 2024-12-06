@@ -207,8 +207,7 @@ void UpdateLightDataColor(inout FDeferredLightData LightData, FInputParams Input
 	const float Attenuation = ComputeLightProfileMultiplier(DerivedParams.TranslatedWorldPosition, GetDeferredLightTranslatedWorldPosition(), -DeferredLightUniforms.Direction, DeferredLightUniforms.Tangent, DeferredLightUniforms.IESAtlasIndex);
 	const float3 AttenuationRGB = Attenuation * GetAtmosphereAndCloudAttenuation(GetStableTranslatedLargeWorldPosition(InputParams.PixelPos, LookupDeviceZ(InputParams.ScreenUV)), InputParams.ScreenUV);
 
-	//LightData.Color *= AttenuationRGB;
-	//LightData.Color *= AttenuationRGB;
+	LightData.Color *= AttenuationRGB;
 }
 
 #if USE_HAIR_LIGHTING == 0
@@ -334,7 +333,6 @@ void DeferredLightPixelMain(
 		float SurfaceShadow = 1.0f;
 		
 		float4 LightAttenuation = GetLightAttenuationFromShadow(InputParams, SceneDepth);
-
 		float4 Radiance = GetDynamicLighting(DerivedParams.TranslatedWorldPosition, DerivedParams.CameraVector, ScreenSpaceData.GBuffer, ScreenSpaceData.AmbientOcclusion, ScreenSpaceData.GBuffer.ShadingModelID, LightData, LightAttenuation, Dither, uint2(InputParams.PixelPos), SurfaceShadow);
 
 		OutColor += Radiance;
